@@ -1,0 +1,173 @@
+var myArray = [];
+var SaveFilePath = [];
+var i=0;
+
+function validate() {
+	//if(i>0){j=i;}
+	var fileName = document.getElementById("campusImageUpload").value;
+	var dot = fileName.lastIndexOf(".") + 1;
+	var extFile = fileName.substr(dot, fileName.length).toLowerCase();
+	if (extFile == "jpg" || extFile == "jpeg" ||extFile == "png") {
+		
+	
+		
+		var formData = new FormData();
+		 var files = document.getElementById("campusImageUpload").files;
+		//var files = $('input[type=file]');
+		console.log("======files.length==="+ files.length+ "======files.length"+SaveFilePath.length); 
+		
+		if(SaveFilePath.length<5){
+			for(var l = 0; l <files.length; l++) {
+					   
+					formData.append("files", files[l]); 
+					SaveFilePath.push("/mediarepo/futurecampus1//"+files[l].name);
+					
+					//alert("onebyone"+SaveFilePath.length);
+					//if(SaveFilePath.length==5)SaveFilePath.length=5;
+					<%-- var endpoint="<%=endpoint%>";   --%>
+					   /*  fileName = Array.from(fileList[i]).map(({name}) => name);  */
+					    console.log("fileListArrayOF[i]=======: "+files[l].name+"===savefilepath-fromPreview"+SaveFilePath.length); 
+					    var anyWindow = window.URL || window.webkitURL;
+				   var objectUrl = anyWindow.createObjectURL(files[l]);
+					i++;
+					 $('#removeButton1').append('<button type="button" id="imgCross'+i+'" class="close-img" onclick="removeSelectImg(imgId'+i+',imgCross'+i+','+i+')" >X</button>');
+	   				 //$('#imagePreview').append('<img id="imgId'+j+'" name="'+files[l].name+'" src="'+endpoint+'/mediarepo/futurecampus1//'+files[l].name+'" />');
+	   				 $('#imagePreview').append('<img id="imgId'+i+'" name="'+files[l].name+'" src="'+objectUrl+'" />');
+				    if(i==5)break;
+			}	 
+		}else{
+			alert("You can only upload a maximum of 5 files"); 
+			return false;}
+		console.log("===savefilepath-length-fromOnload"+SaveFilePath.length); 
+		formData.append("SaveFilePath", SaveFilePath);
+		//console.log("======================="+files[i].name);
+		//console.log("=======================SaveFilePath"+SaveFilePath.toString());
+		$.ajax({
+			 type: 'POST',
+			 data: formData,
+			 contentType: false,
+			 processData: false,
+			 cache: false,
+			 url: 'FileUploadOnBrowse.ils',
+			 success: function (response) {
+			 if (response.Success == true) {
+			    return true;
+			 }
+			 else {
+			    return false;
+			 }
+			 },
+			 error: function () {
+			   return false;
+			 },
+			 failure: function () {
+			   return false;
+			 }
+			 });
+		
+		
+		document.getElementById("validation").innerHTML="";
+	 //accepted
+	} else {
+		if(extFile != ""){
+			document.getElementById("validation").innerHTML="Only jpg ,png and jpeg image files allowed!";
+			document.getElementById("validation").style.color="red";
+			document.getElementById("validation").style.fontWeight="800";
+		}
+		document.getElementById("campusImageUpload").value="";
+	} 
+	} 
+
+var inputLocalFont = document.getElementById("campusImageUpload");
+inputLocalFont.addEventListener("change",imagePreview,false);
+
+
+var imageContainer = [];
+var imagearray;
+var uploadImageName;
+
+ imagearray = "<%=onloadImage%>";
+ uploadImageName = "<%=imageName%>";
+   //  console.log("======++++"+imagearray.toString());
+     console.log("======++++"+uploadImageName.toString());
+    
+<% for(int k=0; k <onloadImage.size(); k++){ %>
+	 
+	 i++;
+	   $('#removeButton1').append('<button type="button" id="imgCross'+i+'" class="close-img" onclick="removeSelectImg(imgId'+i+',imgCross'+i+','+i+')">X</button>'); 
+	   $('#imagePreview').append('<img id="imgId'+i+'" name="<%=imageName.get(k)%>" src="<%=endpoint+onloadImage.get(k)%>"/>');
+	   SaveFilePath.push("<%=onloadImage.get(k)%>"); 
+	   console.log("===savefilepath-length-fromDB"+SaveFilePath.length);
+<% }%> 
+
+ <%-- if(i>0){j=i;}else{j=0;}
+function imagePreview(){
+ var fileList =  this.files; 
+  var fileName ;
+ var anyWindow = window.URL || window.webkitURL;
+ alert(myArray.length);   
+ if(myArray.length===5){myArray.length=6;}  
+ console.log("myArray before if==="+myArray.length);    
+ if(myArray.length<6){  
+	 for(var i = 0; i < fileList.length; i++){
+		 var fileUpload = fileList[i];  
+		 fileName = fileUpload.name;  
+		 
+		    imageContainer.push(fileList[i]);
+		   /*  fileName = Array.from(fileList[i]).map(({name}) => name);  */
+		    console.log("fileListArrayOF[i]=======: "+fileList[i].name+"===savefilepath-fromPreview"+SaveFilePath.length); 
+		   
+	   var objectUrl = anyWindow.createObjectURL(fileList[i]);
+	   j++;
+	   $('#removeButton1').append('<button type="button" id="imgCross'+j+'" class="close-img" onclick="removeSelectImg(imgId'+j+',imgCross'+j+','+j+')" >X</button>');
+	   $('#imagePreview').append('<img id="imgId'+j+'" name="'+fileName+'" src="' + objectUrl + '" />');
+	   //<img src="data:image/jpeg;base64,<%=base64Encoded%>"/>
+	  myArray=SaveFilePath;
+	  alert(myArray.length); 
+	  console.log("myArray[i]=======: "+myArray.length+"===savefilepath-fromPreview : " +SaveFilePath.length);  
+	  
+	  if(fileList.length==5)break;
+	 }
+}else{
+	alert("You can only upload a maximum of 5 files"); 
+	return false;
+} 
+}
+ --%>
+function removeSelectImg(imgId,imgCross,index){ 
+	var code= $("#code").val();
+	src="/mediarepo/futurecampus1//"+imgId.name;
+	 var campusCode= $("#campusCode").val();
+	 $("body").css("pointer-events","none"); 
+	 $("#imagePreviewDeleteMsg").text("Please wait....");
+	 $("#imagePreviewDeleteMsg").css("color","red");
+	  $.ajax({
+		 type: 'POST',
+		 data: "Imagename="+imgId.name+"&code="+code+"&campusCode="+campusCode,
+		 url: 'FileDeleteUpload.ils',
+		 success: function (response) {
+			// alert(response);
+		 if (response == "true") {
+			  SaveFilePath.splice(SaveFilePath.indexOf(src),1);
+			  i--;
+			document.getElementById(imgId.id).remove();  
+			document.getElementById(imgCross.id).remove();
+			console.log("deleted function=======: "+SaveFilePath.length+"===SaveFilePath index : " +(index-1));
+			const myTimeout = setTimeout(myStopFunction, 2000); 
+	
+           if(i==0){
+        	   $("body").css("pointer-events","unset"); 
+        	   $("#imagePreviewDeleteMsg").text("");  
+           }
+			function myStopFunction() {
+				$("body").css("pointer-events","unset");
+				$("#imagePreviewDeleteMsg").text("");
+			}
+			 
+		 }
+		 else {
+		   console.log("error");
+		 }
+		 },
+		 }); 
+}  
