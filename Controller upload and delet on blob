@@ -1,0 +1,207 @@
+ @RequestMapping(value={"FileUploadOnBrowse"}, method={org.springframework.web.bind.annotation.RequestMethod.POST})
+	  @ResponseBody
+	  public String BeforeSaveupdateAboutCampus(MultipartHttpServletRequest request,HttpSession session,FileUploadForm uploadForm)throws IllegalStateException, IOException
+	  {
+		  String path="";
+		  String msg = "";  
+		  List<String> fileNames = new ArrayList<String>();
+		 
+		        Iterator<String> itr = request.getFileNames();
+		        String itr1 = request.getParameter("SaveFilePath");
+		        System.out.println("SaveFilePath==="+itr1.toString());
+				 while(itr.hasNext()){
+
+					List<MultipartFile> mpf = request.getFiles(itr.next());
+					 System.out.println("hiii"+mpf.get(0).getOriginalFilename());
+					
+				    List<MultipartFile> crunchifyFiles =new ArrayList<MultipartFile>();
+				    crunchifyFiles.addAll(mpf);
+				    if (null != crunchifyFiles && crunchifyFiles.size() > 0) {
+				    	System.out.println("============filesize-======"+crunchifyFiles.size());
+				    	for (MultipartFile multipartFile : crunchifyFiles) {
+				    		System.out.println("hyyy"+	crunchifyFiles.get(0).getName());
+				    		 String fileName = multipartFile.getOriginalFilename();
+		            System.out.println(fileName+"===fileName");
+//		        String filePath = req.getRealPath("/");
+		        
+		       // String filePath = "/opt/mediarepo/futurecampus1";
+		     // File theDir = new File("/opt/mediarepo/futurecampus1"); 
+
+		      String pathtest= "";
+		      try {
+					pathtest = URLEncoder.encode(pathtest, "UTF-8");
+				} catch (UnsupportedEncodingException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				} 
+				String filepath =  "";
+				 try {
+					 String endpoint = applicationProperties.getProperty("BOLBAccountEndpoint");
+					 System.out.println("endpoint===java : "+endpoint);
+					 String SAAStoken = applicationProperties.getProperty("SAAStoken");
+				     String isawss3=applicationProperties.getProperty("isawss3");
+				     
+					  boolean isawss3enabled=false;
+				      if(isawss3!=null && isawss3.equals("enable"))
+				    	  isawss3enabled=true;
+				      
+				      System.out.println("isawss3enabled: "+isawss3enabled);
+				      byte[] barry = multipartFile.getBytes();	
+				     if(isawss3enabled) {
+				    	 pathtest= "mediarepo2/"+"futurecampus/";
+				    	 String pathtest1 =  URLDecoder.decode(pathtest, "UTF-8");
+					     filepath =  endpoint+"/"+pathtest1+"/"+fileName;
+					     System.out.println("awsurl==="+filepath);
+				    	  AmazonS3 s3Client = new AmazonS3Client();
+				    	  try {
+				 			 ByteArrayInputStream dataStream = new ByteArrayInputStream(barry);
+				 			ObjectMetadata obkmeta=new ObjectMetadata();
+				 			System.out.println("obkmeta printing======="+obkmeta);
+				 			obkmeta.setContentType("image/*");
+				 			s3Client.putObject(SAAStoken,pathtest+"/"+fileName, dataStream,obkmeta);
+				 		} catch (AmazonServiceException e) {
+				 		    System.err.println(e.getErrorMessage());
+				 	}
+				     }else {
+				    	 pathtest= "mediarepo/"+"futurecampus1/";
+				    	 String pathtest1 =  URLDecoder.decode(pathtest, "UTF-8");
+					     filepath =  endpoint+"/"+pathtest1+"/"+fileName;
+					     System.out.println("BLOB URL==="+filepath);
+						BlobContainerClient blobContainerClient = new BlobContainerClientBuilder()
+								.endpoint(endpoint)
+								.sasToken(SAAStoken)
+								.containerName(pathtest)
+								.buildClient();
+
+								BlockBlobClient blockBlobClient = blobContainerClient.getBlobClient(fileName).getBlockBlobClient();
+								if(blockBlobClient.exists()) {
+									blockBlobClient.delete();
+									try (ByteArrayInputStream dataStream = new ByteArrayInputStream(barry)) {
+										blockBlobClient.upload(dataStream, barry.length);
+										} catch (IOException e) {
+										e.printStackTrace();
+										}
+								}else {
+									try (ByteArrayInputStream dataStream = new ByteArrayInputStream(barry)) {
+									blockBlobClient.upload(dataStream, barry.length);
+									} catch (IOException e) {
+									e.printStackTrace();
+									}
+								}
+				     }
+								System.out.println("======itr1=========="+ itr1.toString());
+							 	String[] itrSplit = itr1.split(",");
+							 	ArrayList<String> itrList = new ArrayList<String>(
+							            Arrays.asList(itrSplit));
+							     session.setAttribute("fileNames", itrList);
+							     msg="success";
+			     }catch(Exception e) {
+			    	 e.printStackTrace();
+			     }
+			    /* if (!theDir.exists()) {
+			         System.out.println("creating directory: " + theDir.getName());
+			         boolean result = false;
+			         try{
+			             theDir.mkdir();
+			             result = true;
+			         } 
+			         catch(SecurityException se){
+			        	 se.printStackTrace();
+			             //handle it   
+			         }        
+			         if(result) {    
+			             System.out.println("DIR created");  
+			         }
+			     }
+		         try {
+					System.out.println("INFO : file path " + filePath + "/" + fileName);
+					 path = filePath + "/" + fileName;
+					File fileToCreate = new File(filePath, fileName);
+                    multipartFile.transferTo(fileToCreate);
+                      //fileNames.add(path);
+				} catch (IllegalStateException e) {
+					e.printStackTrace();
+					msg="Fail to upload";
+				} */
+		      }
+				    }
+				 }
+			return msg ;
+	  }
+	 
+	  @RequestMapping(value={"FileDeleteUpload"}, method={org.springframework.web.bind.annotation.RequestMethod.POST})
+	  @ResponseBody
+	  public String FileDeleteUpload(HttpServletRequest request,HttpSession session)throws IllegalStateException, IOException
+	  {
+		  String deleteStatus="";
+		  String msg = "";
+		  String code =request.getParameter("code");if(code==null)code="";
+		  String campusCode = request.getParameter("campusCode");if(campusCode==null)campusCode="";
+		        List<String> fileNames = new ArrayList<String>();
+		      //  fileNames=(List<String>) request.getAttribute("fileNames");
+		        String imageFileUpload = request.getParameter("Imagename");
+		        System.out.println("====imageFileUpload======="+imageFileUpload.toString());
+		        System.out.println("++++Filenames+++++++++=" +fileNames );
+		        //String filePath = "/opt/mediarepo/futurecampus1/"+imageFileUpload;
+		        String pathtest= "mediarepo/"+"futurecampus1/";
+			      try {
+						pathtest = URLEncoder.encode(pathtest, "UTF-8");
+					} catch (UnsupportedEncodingException e1) {
+						// TODO Auto-generated catch block
+						e1.printStackTrace();
+					} 
+					String filepath =  "";
+					 try {
+				    	  String endpoint=applicationProperties.getProperty("BOLBAccountEndpoint");
+					      String SAAStoken=applicationProperties.getProperty("SAAStoken");
+					      String pathtest1 =  URLDecoder.decode(pathtest, "UTF-8");
+					      filepath =  "/"+pathtest1+"/"+imageFileUpload;
+							System.out.println("filepath++"+filepath);
+					        System.out.println("blovurl==="+filepath);
+							BlobContainerClient blobContainerClient = new BlobContainerClientBuilder()
+									.endpoint(endpoint)
+									.sasToken(SAAStoken)
+									.containerName(pathtest)
+									.buildClient();
+
+									BlockBlobClient blockBlobClient = blobContainerClient.getBlobClient(imageFileUpload).getBlockBlobClient();
+									if(blockBlobClient.exists()) {
+										List<West_College_Details> tpoCollegeDetails = this.tpoServ.getTpoCollegeDetails(code,campusCode);
+									     
+									      if(campusCode == null)campusCode="";
+									      if(campusCode.equalsIgnoreCase(""))campusCode="0";
+									      if(tpoCollegeDetails.get(0).getSno() == Integer.parseInt(campusCode)){
+									       West_College_Details tpoCollege = tpoCollegeDetails.get(0);
+									    	fileNames=(List<String>) session.getAttribute("fileNames");
+										        if(fileNames==null) {
+										        	String fileNames1=tpoCollege.getSuggestion();
+										        	System.out.println("++++Filenames111+++++++++=" +fileNames1.toString());
+										        	String[] strSplit = fileNames1.split(", ");
+										            // Now convert string into ArrayList
+										            ArrayList<String> strList = new ArrayList<String>(
+										                Arrays.asList(strSplit));
+										            fileNames =strList;
+										        }
+										        blockBlobClient.delete();
+												fileNames.remove(filepath);
+												System.out.println("++++Filenames+++++++++=" +fileNames.toString() ); 
+												deleteStatus="true";
+												 System.out.println("++++Deleted file from blob : - " +filepath.toString() + " : Remaining files : "+fileNames );
+									    	 
+												 tpoCollege.setSuggestion(fileNames.toString().substring(1,fileNames.toString().length()-1));
+									    	  
+									    	  msg = tpoServ.updateAboutCamous(tpoCollege);
+									    	  System.out.println("++msgAfterDeleted+"+msg);
+									    	  
+									    	    tpoCollegeDetails = this.tpoServ.getTpoCollegeDetails(code,campusCode);
+												session.setAttribute("tpoCollegeDetails", tpoCollegeDetails);
+									      }
+									} 
+								 	
+				     }catch(Exception e) {
+				    	 e.printStackTrace();
+				     }
+		             request.setAttribute("fileNames", fileNames);
+			         return deleteStatus ;
+		    
+	  }
